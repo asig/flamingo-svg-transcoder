@@ -3,3 +3,5 @@ icons
 *.iml
 *.log
 .idea
+*/build
+.gradle
