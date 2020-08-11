@@ -5,7 +5,7 @@
   <groupId>org.pushingpixels</groupId>
   <artifactId>flamingo-svg-transcoder</artifactId>
   <name>Flamingo SVG Transcoder</name>
-  <version>1.1.1</version>
+  <version>1.2</version>
   <packaging>pom</packaging>
 
   <description>Transform SVG images into pure Java2D icons for your Swing applications</description>
@@ -54,6 +54,10 @@
     </dependency>
   </dependencies>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -64,7 +68,33 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.eluder.coveralls</groupId>
+        <artifactId>coveralls-maven-plugin</artifactId>
+        <version>4.1.0</version>
+      </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>cobertura-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <formats>
+              <format>xml</format>
+              <format>html</format>
+            </formats>
+            <aggregate>true</aggregate>
+            <instrumentation>
+              <excludes>
+                <exclude>**/gui/*.class</exclude>
+              </excludes>
+            </instrumentation>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
 </project>

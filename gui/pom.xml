@@ -5,11 +5,10 @@
   <parent>
     <groupId>org.pushingpixels</groupId>
     <artifactId>flamingo-svg-transcoder</artifactId>
-    <version>1.1.1</version>
+    <version>1.2</version>
   </parent>
   <artifactId>flamingo-svg-transcoder-gui</artifactId>
   <name>SVG Transcoder GUI</name>
-  <version>${parent.version}</version>
   <packaging>jar</packaging>
 
   <description>Transform SVG images into Java2D icons for your Swing applications</description>
@@ -54,6 +53,18 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Codebase>*</Codebase>
+              <Permissions>all-permissions</Permissions>
+              <Application-Name>Flamingo SVG Transcoder</Application-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.2.1</version>
@@ -65,7 +76,7 @@
           </execution>
         </executions>
         <configuration>
-          <mainClass>org.pushingpixels.flamingo.api.svg.SVGApplication</mainClass>
+          <mainClass>org.pushingpixels.flamingo.api.svg.gui.SVGApplication</mainClass>
         </configuration>
       </plugin>
       <plugin>
@@ -81,7 +92,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.pushingpixels.flamingo.api.svg.SVGApplication</mainClass>
+                  <mainClass>org.pushingpixels.flamingo.api.svg.gui.SVGApplication</mainClass>
                   <manifestEntries>
                     <Application-Name>Flamingo SVG Transcoder</Application-Name>
                     <Permissions>all-permissions</Permissions>
@@ -99,19 +110,20 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>keytool-maven-plugin</artifactId>
+        <version>1.2</version>
         <configuration>
           <keystore>target/maven.keystore</keystore>
           <dname>cn=SVG Transcoder</dname>
-          <keypass>secret</keypass>
-          <storepass>secret</storepass>
-          <alias>maven</alias>
+          <keypass>${keypass}</keypass>
+          <storepass>${keypass}</storepass>
+          <alias>${keyalias}</alias>
           <validity>3650</validity>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>webstart-maven-plugin</artifactId>
-        <version>1.0-beta-3</version>
+        <version>1.0-beta-7</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -122,20 +134,27 @@
         </executions>
         <configuration>
           <jnlp>
-            <mainClass>org.pushingpixels.flamingo.api.svg.SVGApplication</mainClass>
+            <mainClass>org.pushingpixels.flamingo.api.svg.gui.SVGApplication</mainClass>
             <j2seVersion>1.7+</j2seVersion>
           </jnlp>
           <sign>
-            <keystore>${basedir}/src/main/config/maven.keystore</keystore>
-            <keypass>secret</keypass>
-            <storepass>secret</storepass>
+            <keystore>${keystore}</keystore>
+            <keypass>${keypass}</keypass>
+            <storepass>${keypass}</storepass>
             <storetype>jks</storetype>
-            <alias>maven</alias>
+            <alias>${keyalias}</alias>
+            <tsaLocation>http://timestamp.comodoca.com/rfc3161</tsaLocation>
             <verify>true</verify>
           </sign>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  
+  <properties>
+    <keystore>${basedir}/src/main/config/maven.keystore</keystore>
+    <keyalias>maven</keyalias>
+    <keypass>secret</keypass>
+  </properties>
 
 </project>

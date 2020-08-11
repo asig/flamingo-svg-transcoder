@@ -115,13 +115,13 @@ public class SvgTranscoder {
 
     /** The current paint, as a Java declaration. */
     private String currentPaint;
-    
+
     /** The current stroke, as a Java declaration. */
     private String currentStroke;
 
     /** The current shape. */
     private Shape currentShape;
-    
+
     /**
      * Creates a new transcoder.
      *
@@ -241,7 +241,7 @@ public class SvgTranscoder {
             bounds = new Rectangle2D.Double(0, 0, context.getDocumentSize().getWidth(), context.getDocumentSize().getHeight());
         }
         
-        Map<Template.Token, Object> params = new HashMap<Template.Token, Object>();
+        Map<Template.Token, Object> params = new HashMap<>();
         params.put(Template.Token.PACKAGE, javaPackageName != null ? "package " + javaPackageName + ";" : "");
         params.put(Template.Token.CLASSNAME, javaClassName);
         params.put(Template.Token.X, (int) Math.ceil(bounds.getX()));
@@ -304,7 +304,7 @@ public class SvgTranscoder {
      * @param painter Fill shape painter.
      */
     private void transcodeFillShapePainter(FillShapePainter painter) {
-        Paint paint = (Paint) painter.getPaint();
+        Paint paint = painter.getPaint();
         if (paint == null) {
             return;
         }
@@ -328,7 +328,7 @@ public class SvgTranscoder {
      * @param painter Stroke shape painter.
      */
     private void transcodeStrokeShapePainter(StrokeShapePainter painter) {
-        Paint paint = (Paint) painter.getPaint();
+        Paint paint = painter.getPaint();
         if (paint == null) {
             return;
         }
@@ -362,11 +362,11 @@ public class SvgTranscoder {
      * @throws UnsupportedOperationException if the graphics node is unsupported.
      */
     private void transcodeGraphicsNode(GraphicsNode node, String comment) throws UnsupportedOperationException {
-        transcodeCompositeChange((AlphaComposite) node.getComposite());
+        transcodeCompositeChange(getAbsoluteAlphaComposite(node));
         
         AffineTransform transform = node.getTransform();
         if (transform != null && !transform.isIdentity()) {
-            printWriter.println("transformations.offer(g.getTransform());");
+            printWriter.println("transformations.push(g.getTransform());");
             printWriter.println("g.transform(" + AffineTransformTranscoder.INSTANCE.transcode(transform) + ");");
         }
         
@@ -388,9 +388,29 @@ public class SvgTranscoder {
         } finally {
             if (transform != null && !transform.isIdentity()) {
                 printWriter.println("");
-                printWriter.println("g.setTransform(transformations.pollLast()); // " + comment);
+                printWriter.println("g.setTransform(transformations.pop()); // " + comment);
             }
         }
+    }
+
+    /**
+     * Get the absolute alpha composite of a node.
+     */
+    private AlphaComposite getAbsoluteAlphaComposite(GraphicsNode node) {
+        AlphaComposite composite = (AlphaComposite) node.getComposite();
+        
+        if (composite != null) {
+            float alpha = composite.getAlpha();
+            while ((node = node.getParent()) != null) {
+                AlphaComposite parentComposite = (AlphaComposite) node.getComposite();
+                if (parentComposite != null) {
+                    alpha = alpha * parentComposite.getAlpha();
+                }
+            }
+            composite = AlphaComposite.getInstance(composite.getRule(), alpha);
+        }
+        
+        return composite;
     }
 
     /**
