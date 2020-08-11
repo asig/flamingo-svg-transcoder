@@ -39,8 +39,7 @@ public class SvgTranscoderTaskTest extends TestCase {
         project.setCoreLoader(getClass().getClassLoader());
         project.init();
 
-        File buildFile = new File("target/test-classes/testbuild.xml");
-        buildFile.getAbsoluteFile().getParentFile().mkdirs();
+        File buildFile = new File("build/classes/java/test/testbuild.xml");
         project.setBaseDir(buildFile.getParentFile());
 
         ProjectHelper helper = ProjectHelper.getProjectHelper();
@@ -67,11 +66,11 @@ public class SvgTranscoderTaskTest extends TestCase {
             // expected
         }
     }
-    
+
     public void testTranscode() {
         project.executeTarget("transcode");
-        
-        File transcoded = new File("target/test-classes/ApacheFeather.java");
+
+        File transcoded = new File("build/classes/java/test/ApacheFeather.java");
         assertTrue(transcoded + " wasn't generated", transcoded.exists());
     }
 }

@@ -1,31 +1,31 @@
 /*
  * Copyright (c) 2005-2010 Flamingo Kirill Grouchnikov. All Rights Reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- *  o Redistributions of source code must retain the above copyright notice, 
- *    this list of conditions and the following disclaimer. 
- *     
- *  o Redistributions in binary form must reproduce the above copyright notice, 
- *    this list of conditions and the following disclaimer in the documentation 
- *    and/or other materials provided with the distribution. 
- *     
- *  o Neither the name of Flamingo Kirill Grouchnikov nor the names of 
- *    its contributors may be used to endorse or promote products derived 
- *    from this software without specific prior written permission. 
- *     
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ *
+ *  o Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ *  o Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ *  o Neither the name of Flamingo Kirill Grouchnikov nor the names of
+ *    its contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 package org.pushingpixels.flamingo.api.svg;
@@ -149,7 +149,7 @@ public class SvgTranscoder {
      */
     private InputStream getInputStream() throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        
+
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         SAXParser parser = factory.newSAXParser();
@@ -159,7 +159,7 @@ public class SvgTranscoder {
                 return new InputSource(new StringReader(""));
             }
         });
-        
+
         InputSource input;
         if (url.toString().endsWith(".svgz")) {
             input = new InputSource(new GZIPInputStream(url.openStream()));
@@ -167,16 +167,16 @@ public class SvgTranscoder {
             input = new InputSource(url.openStream());
         }
         SAXSource source = new SAXSource(reader, input);
-        
+
         Result result = new StreamResult(buffer);
-        
+
         StreamSource stylesheet = new StreamSource(getClass().getResourceAsStream("/svg-cleanup.xsl"));
-        
+
         Transformer transformer = TransformerFactory.newInstance().newTransformer(stylesheet);
         transformer.transform(source, result);
-        
+
         stylesheet.getInputStream().close();
-        
+
         return new ByteArrayInputStream(buffer.toByteArray());
     }
 
@@ -193,11 +193,11 @@ public class SvgTranscoder {
         BridgeContext context = new BridgeContext(ua, loader);
         context.setDynamicState(BridgeContext.DYNAMIC);
         ua.setBridgeContext(context);
-        
+
         try {
             Document svgDoc = loader.loadDocument(url.toString(), getInputStream());
             new GVTBuilder().build(context, svgDoc);
-            
+
             transcode(context);
         } catch (Exception e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to transcode " + url, e);
@@ -221,26 +221,26 @@ public class SvgTranscoder {
      */
     public void transcode(BridgeContext context) throws IOException {
         GraphicsNode root = context.getGraphicsNode(context.getDocument());
-        
+
         ByteArrayOutputStream paintingCodeStream = new ByteArrayOutputStream();
         this.printWriter = new IndentingPrintWriter(new PrintWriter(paintingCodeStream));
         transcodeGraphicsNode(root, "");
         this.printWriter.close();
-        
-        String separator = 
+
+        String separator =
                   "        paint${count}(g, origAlpha, transformations);\n"
                 + "    }\n\n"
                 + "    private static void paint${count}(Graphics2D g, float origAlpha, java.util.LinkedList<AffineTransform> transformations) {\n"
                 + "        Shape shape = null;\n";
-        
+
         String paintingCode = new String(paintingCodeStream.toByteArray());
         paintingCode = TextSplitter.insert(paintingCode, separator, 3000);
-        
+
         Rectangle2D bounds = root.getBounds();
         if (bounds == null) {
             bounds = new Rectangle2D.Double(0, 0, context.getDocumentSize().getWidth(), context.getDocumentSize().getHeight());
         }
-        
+
         Map<Template.Token, Object> params = new HashMap<>();
         params.put(Template.Token.PACKAGE, javaPackageName != null ? "package " + javaPackageName + ";" : "");
         params.put(Template.Token.CLASSNAME, javaClassName);
@@ -263,9 +263,9 @@ public class SvgTranscoder {
         if (shape == currentShape) {
             return;
         }
-        
+
         ShapeTranscoder.INSTANCE.transcode(shape, printWriter);
-        
+
         currentShape = shape;
     }
 
@@ -308,7 +308,7 @@ public class SvgTranscoder {
         if (paint == null) {
             return;
         }
-        
+
         transcodeShape(painter.getShape());
         transcodePaintChange(paint);
         printWriter.println("g.fill(shape);");
@@ -332,7 +332,7 @@ public class SvgTranscoder {
         if (paint == null) {
             return;
         }
-        
+
         transcodeShape(painter.getShape());
         transcodePaintChange(paint);
         transcodeStrokeChange(painter.getStroke());
@@ -363,13 +363,13 @@ public class SvgTranscoder {
      */
     private void transcodeGraphicsNode(GraphicsNode node, String comment) throws UnsupportedOperationException {
         transcodeCompositeChange(getAbsoluteAlphaComposite(node));
-        
+
         AffineTransform transform = node.getTransform();
         if (transform != null && !transform.isIdentity()) {
             printWriter.println("transformations.push(g.getTransform());");
             printWriter.println("g.transform(" + AffineTransformTranscoder.INSTANCE.transcode(transform) + ");");
         }
-        
+
         try {
             printWriter.println("");
             printWriter.println("// " + comment);
@@ -398,7 +398,7 @@ public class SvgTranscoder {
      */
     private AlphaComposite getAbsoluteAlphaComposite(GraphicsNode node) {
         AlphaComposite composite = (AlphaComposite) node.getComposite();
-        
+
         if (composite != null) {
             float alpha = composite.getAlpha();
             while ((node = node.getParent()) != null) {
@@ -409,22 +409,22 @@ public class SvgTranscoder {
             }
             composite = AlphaComposite.getInstance(composite.getRule(), alpha);
         }
-        
+
         return composite;
     }
 
     /**
      * Transcode the specified text node.
-     * 
+     *
      * @param text
      */
     private void transcodeTextNode(TextNode text) {
         if (text.getText() == null) {
             return;
         }
-        
+
         printWriter.println("// " + text.getText().replaceAll("[\\r\\n]]", " "));
-        
+
         Graphics2D g = new NoOpGraphics2D() {
             public void draw(Shape shape) {
                 transcodeShape(shape);
@@ -458,7 +458,7 @@ public class SvgTranscoder {
                 }
             }
         };
-        
+
         text.getTextPainter().paint(text, g);
     }
 }
